@@ -1,3 +1,6 @@
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 vim.wo.cursorline = true
 vim.wo.number = true
 vim.wo.relativenumber = true
@@ -17,3 +20,5 @@ vim.opt.smartindent = true
 vim.opt.expandtab = true
 
 require("config.lazy")
+
+require("lua.keymapping")
