@@ -21,4 +21,4 @@ vim.opt.expandtab = true
 
 require("config.lazy")
 
-require("lua.keymapping")
+require("keymapping")
