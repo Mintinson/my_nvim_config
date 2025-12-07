@@ -3,7 +3,7 @@ return { -----------------------------------------------------------------------
 -----------------------------------------------------------------------------
 {
     "nvim-lualine/lualine.nvim",
-    dependencies = {"nvim-tree/nvim-web-devicons"}, -- 依赖图标库，让状态栏显示文件图标
+    dependencies = {"nvim-tree/nvim-web-devicons", "AndreM222/copilot-lualine"}, -- 依赖图标库，让状态栏显示文件图标
     opts = {
         options = {
             theme = "catppuccin", -- 设置主题为 Catppuccin（与你之前的主题一致）
@@ -25,10 +25,39 @@ return { -----------------------------------------------------------------------
                     return " "
                 end, -- 一个占位符，纯为了排版好看
                 color = "Comment"
-            }},
-            lualine_x = {"lsp_status"} -- 顶部右侧：显示 LSP 加载状态
+            }}
+        },
+        lualine_x = {"lsp_status"}, -- 顶部右侧：显示 LSP 加载状态
+        inactive_winbar = {
+            -- Always show winbar
+            -- stylua: ignore
+            lualine_b = {function()
+                return " "
+            end}
         }
-    }
+    },
+    config = function(_, opts)
+        local mocha = require("catppuccin.palettes").get_palette("mocha")
+
+        local copilot = {
+            "copilot",
+            show_colors = true,
+            symbols = {
+                status = {
+                    hl = {
+                        enabled = mocha.green,
+                        sleep = mocha.overlay0,
+                        disabled = mocha.surface0,
+                        warning = mocha.peach,
+                        unknown = mocha.red
+                    }
+                },
+                spinner_color = mocha.mauve
+            }
+        }
+        table.insert(opts.sections.lualine_c, 1, copilot)
+        require("lualine").setup(opts)
+    end
 }, -----------------------------------------------------------------------------
 -- 2. Barbar: 顶部标签页 (类似浏览器的 Tabs)
 -----------------------------------------------------------------------------
@@ -121,6 +150,9 @@ return { -----------------------------------------------------------------------
     }},
 
     opts = {
+        -- Automatically hide the tabline when there are this many buffers left.
+        -- Set to any value >=0 to enable.
+        auto_hide = 1,
         -- 侧边栏集成配置
         sidebar_filetypes = {
             -- 当打开 NvimTree 时，Barbar 会自动向右偏移，防止挡住文件树的标题
@@ -179,11 +211,14 @@ return { -----------------------------------------------------------------------
         popupmenu = {
             enabled = false -- 禁用 Noice 自带的补全菜单 (通常因为你已经用了 cmp 插件，避免冲突)
         },
+        notify = {
+            enabled = false
+        },
         -- LSP 集成配置
         lsp = {
             override = {
                 -- 接管 LSP 的文档悬浮窗和 Markdown 渲染，让它们看起来更漂亮（有边框、高亮等）
-                ["nvim.lsp.util.convert_input_to_markdown_lines"] = true,
+                ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
                 ["vim.lsp.util.stylize_markdown"] = true,
                 ["cop.entry.get_documentation"] = true
             }
@@ -211,4 +246,10 @@ return { -----------------------------------------------------------------------
         -- 如果你发现保存文件时没提示了，就是这几行代码干的。
         }
     }
+}, {
+    "echasnovski/mini.diff",
+    event = "BufReadPost",
+    version = "*",
+    -- stylua: ignore
+    opts = {}
 }}

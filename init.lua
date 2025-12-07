@@ -1,9 +1,9 @@
+
 vim.g.loaded_netrw = 1 -- 
 vim.g.loaded_netrwPlugin = 1
 vim.wo.cursorline = true
 vim.wo.number = true
 vim.wo.relativenumber = true
-
 vim.opt.list = true
 vim.opt.listchars = {
   tab = "▸ ",
@@ -24,6 +24,10 @@ vim.opt.expandtab = true -- 将 Tab 键转换为空格 (这是重点！按 Tab �
 vim.opt.scrolloff = 15     -- 上下滚动余量
 vim.opt.sidescrolloff = 10 -- 左右滚动余量 (同上，针对长行左右移动)
 vim.opt.startofline = false
+
+-- for code companion
+vim.opt.splitbelow = true  -- 新窗口在当前窗口下方打开
+vim.opt.splitright = true  -- 新窗口在当前窗口右侧打开
 
 vim.opt.conceallevel = 2  -- for markdown or json
 

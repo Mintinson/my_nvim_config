@@ -1,8 +1,12 @@
 return {{
     'saghen/blink.cmp',
+    event = {'BufReadPost', 'BufNewFile'},
     -- optional: provides snippets for the snippet source
     dependencies = { -- 'rafamadriz/friendly-snippets'
-    "nvim-tree/nvim-web-devicons", "onsails/lspkind.nvim", "fang2hou/blink-copilot"},
+    {
+        "xzbdmw/colorful-menu.nvim",
+        opts = {}
+    }, "nvim-tree/nvim-web-devicons", "onsails/lspkind.nvim", "fang2hou/blink-copilot"},
 
     -- use a release tag to download pre-built binaries
     version = '1.*',
@@ -27,7 +31,9 @@ return {{
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         keymap = {
-            preset = 'default'
+            preset = 'default',
+            ['<C-u>'] = {"scroll_documentation_up", 'fallback'},
+            ['<C-d>'] = {"scroll_documentation_down", 'fallback'}
         },
 
         appearance = {
@@ -39,8 +45,38 @@ return {{
         -- (Default) Only show the documentation popup when manually triggered
         completion = {
             documentation = {
-                auto_show = false
+                auto_show = true
             }
+        },
+
+        cmdline = {
+            completion = {
+                menu = {
+                    auto_show = true
+                }
+            }
+        },
+
+        menu = {
+            draw = {
+                columns = {{"kind_icon"}, {
+                    "label",
+                    gap = 1
+                }},
+                components = {
+                    -- [修复] 必须指定宽度，否则可能会导致渲染异常
+                        width = { fill = true, max = 60 },
+                    label = {
+                        text = function(ctx)
+                            return require('colorful-menu').blink_components_text(ctx)
+                        end,
+                        highlight = function(ctx)
+                            return require('colorful-menu').blink_components_highlight(ctx)
+                        end
+                    }
+                }
+            }
+
         },
 
         -- Default list of enabled providers defined so that you can extend it
@@ -104,7 +140,7 @@ return {{
                     return ctx.trigger.initial_kind ~= "trigger_character"
                 end,
                 fallbacks = {"buffer"}
-            },
+            }
             -- cmdline = {
             --     min_keyword_length = 2,
             --     -- Ignores cmdline completions when executing shell commands
