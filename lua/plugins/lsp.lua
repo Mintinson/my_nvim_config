@@ -176,7 +176,18 @@ return {{
         })
 
     end
-}}
 
--- 配置解耦：如果以后想加 pyright 或 clangd，只需要在 ensure_installed 
--- 里加名字，下面会自动生效，不需要每次都手写一遍 vim.lsp.config。
+    -- 配置解耦：如果以后想加 pyright 或 clangd，只需要在 ensure_installed 
+    -- 里加名字，下面会自动生效，不需要每次都手写一遍 vim.lsp.config。
+}, {
+    "folke/lazydev.nvim",
+    ft = "lua", -- onbly load for lua files
+    opts = {
+        library = { -- see the configuration section for more details
+        -- load luvit types when the vim.uv word is found
+        {
+            path = "${3rd}/luv/library",
+            words = {"vim%.uv"}
+        }}
+    }
+}}
