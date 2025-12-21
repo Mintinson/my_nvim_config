@@ -1,54 +1,37 @@
 return {{
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "Shatur/neovim-ayu",
+    name = "ayu",
     priority = 1000,
-    opts = {
-        transparent_background = true,
-        custom_highlights = function(colors)
-            -- stylua: ignore
-            return {
-                LineNr = {
-                    fg = colors.surface2
-                },
-                Visual = {
-                    bg = colors.overlay0
-                },
-                Search = {
-                    bg = colors.surface2
-                },
-                IncSearch = {
-                    bg = colors.mauve
-                },
-                CurSearch = {
-                    bg = colors.mauve
-                },
-                MatchParen = {
-                    bg = colors.mauve,
-                    fg = colors.base,
-                    bold = true
-                }
-            }
-        end,
-        integrations = {
-            barbar = true,
-            blink_cmp = true,
-            gitsigns = true,
-            mason = true,
-            noice = true,
-            nvimtree = true,
-            rainbow_delimiters = true,
-            snacks = {
-                enabled = true,
-                indent_scope_color = "flamingo" -- catppuccin color (eg. `lavender`) Default: text
-            },
-            which_key = true,
-            flash = true,
-            lsp_trouble = true
+    config = function()
+        local theme = require("config.theme")
+        
+        -- Configure ayu theme
+        require('ayu').setup({
+            mirage = true,  -- Set to true for ayu-mirage
+            terminal = true, -- Set terminal colors
+            overrides = {},  -- Custom color overrides if needed
+            
+        })
+        
+        -- Apply the colorscheme
+        vim.cmd.colorscheme(theme.name)
+        
+        -- Apply custom highlights using our theme abstraction layer
+        local colors = theme.colors
+        
+        -- stylua: ignore
+        local highlights = {
+            LineNr = { fg = colors.line_nr },
+            Visual = { bg = colors.visual },
+            Search = { bg = colors.search },
+            IncSearch = { bg = colors.warning, fg = colors.bg },
+            CurSearch = { bg = colors.warning, fg = colors.bg },
+            MatchParen = { bg = colors.match_paren, fg = colors.fg, bold = true },
         }
-    },
-    config = function(_, opts)
-        require("catppuccin").setup(opts)
-
-        vim.cmd.colorscheme("catppuccin")
+        
+        -- Apply highlights
+        for group, settings in pairs(highlights) do
+            vim.api.nvim_set_hl(0, group, settings)
+        end
     end
 }}

@@ -6,7 +6,7 @@ return { -----------------------------------------------------------------------
     dependencies = {"nvim-tree/nvim-web-devicons", "AndreM222/copilot-lualine"}, -- 依赖图标库，让状态栏显示文件图标
     opts = {
         options = {
-            theme = "catppuccin", -- 设置主题为 Catppuccin（与你之前的主题一致）
+            theme = "ayu", -- 设置主题为 Ayu
             always_divide_middle = false -- 当有多个分屏时，不强制在中间显示分割线
         },
         -- sections 定义底栏的显示内容 (A/B/C 在左边，X/Y/Z 在右边)
@@ -37,7 +37,8 @@ return { -----------------------------------------------------------------------
         }
     },
     config = function(_, opts)
-        local mocha = require("catppuccin.palettes").get_palette("mocha")
+        local theme = require("config.theme")
+        local colors = theme.colors
 
         local copilot = {
             "copilot",
@@ -45,14 +46,14 @@ return { -----------------------------------------------------------------------
             symbols = {
                 status = {
                     hl = {
-                        enabled = mocha.green,
-                        sleep = mocha.overlay0,
-                        disabled = mocha.surface0,
-                        warning = mocha.peach,
-                        unknown = mocha.red
+                        enabled = colors.green,
+                        sleep = colors.overlay,
+                        disabled = colors.surface,
+                        warning = colors.peach,
+                        unknown = colors.red
                     }
                 },
-                spinner_color = mocha.mauve
+                spinner_color = colors.mauve
             }
         }
         table.insert(opts.sections.lualine_c, 1, copilot)
