@@ -148,12 +148,20 @@ return { -----------------------------------------------------------------------
         "<CMD>BufferClose<CR>",
         mode = {"n"},
         desc = "Close buffer"
-    }},
+    },
+    -- === 新增：关闭所有其他标签 (Close All But Current) ===
+    {
+        "<leader>bo", 
+        "<CMD>BufferCloseAllButCurrent<CR>", 
+        mode = {"n"}, 
+        desc = "[Buffer] Close all other buffers" 
+    },
+},
 
     opts = {
         -- Automatically hide the tabline when there are this many buffers left.
         -- Set to any value >=0 to enable.
-        auto_hide = 1,
+        auto_hide = false,
         -- 侧边栏集成配置
         sidebar_filetypes = {
             -- 当打开 NvimTree 时，Barbar 会自动向右偏移，防止挡住文件树的标题
@@ -182,8 +190,46 @@ return { -----------------------------------------------------------------------
 {
     "HiPhish/rainbow-delimiters.nvim",
     submodules = false, -- 不需要下载子模块
-    main = "rainbow-delimiters.setup", -- 指定入口函数
-    opts = {} -- 默认配置：让成对的括号显示不同颜色，方便看代码嵌套
+    -- main = "rainbow-delimiters.setup", -- 指定入口函数
+    -- opts = {} -- 默认配置：让成对的括号显示不同颜色，方便看代码嵌套
+    config = function()
+        -- 1. 引入你自己的主题配置 (lua/config/theme.lua)
+        -- 这样括号颜色就能和你当前的 Ayu 主题完美融合
+        local theme = require("config.theme")
+        local colors = theme.colors
+        
+        -- 2. 定义高亮组 (映射到你的主题变量)
+        vim.api.nvim_set_hl(0, "RainbowDelimiterRed",    { fg = colors.red })      -- #F07178
+        vim.api.nvim_set_hl(0, "RainbowDelimiterYellow", { fg = colors.warning })  -- #E6B450
+        vim.api.nvim_set_hl(0, "RainbowDelimiterBlue",   { fg = colors.secondary })-- #39BAE6
+        vim.api.nvim_set_hl(0, "RainbowDelimiterOrange", { fg = colors.peach })    -- #FF8F40
+        vim.api.nvim_set_hl(0, "RainbowDelimiterGreen",  { fg = colors.green })    -- #C2D94C
+        vim.api.nvim_set_hl(0, "RainbowDelimiterViolet", { fg = colors.mauve })    -- #D4BFFF
+        vim.api.nvim_set_hl(0, "RainbowDelimiterCyan",   { fg = colors.hint })     -- #95E6CB
+
+        -- 3. 配置插件使用上述颜色
+        local rainbow = require("rainbow-delimiters")
+        require("rainbow-delimiters.setup").setup({
+            strategy = {
+                [''] = rainbow.strategy['global'],
+                vim = rainbow.strategy['local'],
+            },
+            query = {
+                [''] = 'rainbow-delimiters',
+                lua = 'rainbow-blocks',
+            },
+            -- 指定颜色循环顺序
+            highlight = {
+                "RainbowDelimiterRed",
+                "RainbowDelimiterYellow",
+                "RainbowDelimiterBlue",
+                "RainbowDelimiterOrange",
+                "RainbowDelimiterGreen",
+                "RainbowDelimiterViolet",
+                "RainbowDelimiterCyan",
+            },
+        })
+    end
 }, -----------------------------------------------------------------------------
 -- 5. Noice: 消息通知与命令行 UI 增强
 -----------------------------------------------------------------------------

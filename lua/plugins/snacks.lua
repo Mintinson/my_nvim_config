@@ -164,13 +164,15 @@ return {{
             }
         }
     },
-    keys = {{
-        "<A-w>",
-        function()
-            require("snacks").bufdelete() -- 调用 bufdelete 删除当前缓冲区
-        end,
-        desc = "[Snacks] Delete buffer"
-    }, {
+    keys = {
+    --     {
+    --     "<A-w>",
+    --     function()
+    --         require("snacks").bufdelete() -- 调用 bufdelete 删除当前缓冲区
+    --     end,
+    --     desc = "[Snacks] Delete buffer"
+    -- },
+    {
         "<leader>si",
         function()
             require("snacks").image.hover() -- 在悬浮窗中显示光标下的图片
