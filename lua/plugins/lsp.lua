@@ -115,11 +115,10 @@ return {{
                 vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, {
                     desc = "[LSP] Remove workspace folder"
                 })
-                vim.keymap.set("n", "<leader>wl", function()
-                    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-                end, {
-                    desc = "[LSP] List workspace folders"
-                })
+                vim.keymap.set("n", "<leader>wl",
+                    function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, {
+                        desc = "[LSP] List workspace folders"
+                    })
                 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {
                     buffer = ev.buf,
                     desc = "[LSP] Rename"
@@ -131,9 +130,7 @@ return {{
         -- 在加载 lspconfig 之前拦截 notify，过滤掉特定的 warning
         local _notify = vim.notify
         vim.notify = function(msg, ...)
-            if msg:match("The `require%('lspconfig'%)` \"framework\" is deprecated") then
-                return
-            end
+            if msg:match("The `require%('lspconfig'%)` \"framework\" is deprecated") then return end
             _notify(msg, ...)
         end
 
@@ -192,20 +189,18 @@ return {{
     }
 }, {
     "stevearc/conform.nvim",
-    cmd = { "ConformInfo" },
-    keys = {
-        {
-            "<M-F>", -- Alt + Shift + f
-            function()
-                require("conform").format({
-                    async = true,
-                    lsp_format = "fallback"
-                })
-            end,
-            mode = {"n", "v"},
-            desc = "Format buffer"
-        }
-    },
+    cmd = {"ConformInfo"},
+    keys = {{
+        "<M-F>", -- Alt + Shift + f
+        function()
+            require("conform").format({
+                async = true,
+                lsp_format = "fallback"
+            })
+        end,
+        mode = {"n", "v"},
+        desc = "Format buffer"
+    }},
     opts = {
         formatters_by_ft = {
             lua = {"stylua"},
@@ -214,7 +209,7 @@ return {{
             ["_"] = {"trim_whitespace"}
         }
     }
-},{
+}, {
     "mfussenegger/nvim-lint",
     event = "BufWritePost",
     config = function()
