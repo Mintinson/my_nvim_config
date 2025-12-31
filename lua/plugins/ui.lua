@@ -21,7 +21,9 @@ return { -----------------------------------------------------------------------
         winbar = {
             lualine_a = {"filename"}, -- 顶部左侧：显示文件名
             lualine_b = {{
-                function() return " " end, -- 一个占位符，纯为了排版好看
+                function()
+                    return " "
+                end, -- 一个占位符，纯为了排版好看
                 color = "Comment"
             }}
         },
@@ -29,7 +31,9 @@ return { -----------------------------------------------------------------------
         inactive_winbar = {
             -- Always show winbar
             -- stylua: ignore
-            lualine_b = {function() return " " end}
+            lualine_b = {function()
+                return " "
+            end}
         }
     },
     config = function(_, opts)
@@ -296,12 +300,6 @@ return { -----------------------------------------------------------------------
         }
     }
 }, {
-    "echasnovski/mini.diff",
-    event = "BufReadPost",
-    version = "*",
-    -- stylua: ignore
-    opts = {}
-}, {
     "folke/which-key.nvim",
     event = "VeryLazy",
     dependencies = {"nvim-tree/nvim-web-devicons"},
@@ -325,26 +323,42 @@ return { -----------------------------------------------------------------------
     }}
 }, {
     "petertriho/nvim-scrollbar",
-    opts = {
-        handelers = {
-            gitsigns = true, -- Requires gitsigns
-            search = true -- Requires hlslens
-        },
-        marks = {
-            Search = {
-                color = "#65b7f1"
+    config = function()
+        local theme = require("config.theme")
+        local colors = theme.colors
+
+        require("scrollbar").setup({
+            handlers = { -- 注意：原代码拼写错误 "handelers" 应为 "handlers"
+                gitsigns = true, -- Requires gitsigns
+                search = true -- Requires hlslens
             },
-            GitAdd = {
-                text = "┃"
+            marks = {
+                Search = {
+                    color = colors.secondary -- 使用主题的 secondary 颜色 (#39BAE6)
+                },
+                GitAdd = {
+                    text = "┃",
+                    color = colors.green -- 使用主题的 green 颜色
+                },
+                GitChange = {
+                    text = "┃",
+                    color = colors.warning -- 使用主题的 warning 颜色
+                },
+                GitDelete = {
+                    text = "_",
+                    color = colors.red -- 使用主题的 red 颜色
+                }
             },
-            GitChange = {
-                text = "┃"
-            },
-            GitDelete = {
-                text = "_"
+            -- 可选：自定义滚动条本身的颜色
+            handle = {
+                color = colors.secondary -- 滚动条手柄颜色
             }
-        }
-    }
+            -- 可选：自定义背景颜色
+            -- excluded_filetypes = {
+            --     "NvimTree",
+            -- }
+        })
+    end
 }, {
     "kevinhwang91/nvim-hlslens",
     -- stylua: ignore
@@ -390,7 +404,9 @@ return { -----------------------------------------------------------------------
     -- stylua: ignore
     keys = {{
         "<leader>df",
-        function() require("mini.diff").toggle_overlay(vim.api.nvim_get_current_buf()) end,
+        function()
+            require("mini.diff").toggle_overlay(vim.api.nvim_get_current_buf())
+        end,
         mode = "n",
         desc = "[Mini.Diff] Toggle diff overlay"
     }},
@@ -499,7 +515,9 @@ return { -----------------------------------------------------------------------
             })
             -- 可视模式下暂存选中的修改块
             -- stylua: ignore
-            map("v", "<leader>ggs", function() gitsigns.stage_hunk({vim.fn.line("."), vim.fn.line("v")}) end, {
+            map("v", "<leader>ggs", function()
+                gitsigns.stage_hunk({vim.fn.line("."), vim.fn.line("v")})
+            end, {
                 desc = "[Git] Stage hunk (Visual)"
             })
 
@@ -509,7 +527,9 @@ return { -----------------------------------------------------------------------
             })
             -- 可视模式下重置选中的修改块
             -- stylua: ignore
-            map("v", "<leader>ggr", function() gitsigns.reset_hunk({vim.fn.line("."), vim.fn.line("v")}) end, {
+            map("v", "<leader>ggr", function()
+                gitsigns.reset_hunk({vim.fn.line("."), vim.fn.line("v")})
+            end, {
                 desc = "[Git] Reset hunk (Visual)"
             })
 
@@ -533,7 +553,9 @@ return { -----------------------------------------------------------------------
 
             -- 将所有差异放入 Quickfix 列表
             -- stylua: ignore
-            map("n", "<leader>ggQ", function() gitsigns.setqflist("all") end, {
+            map("n", "<leader>ggQ", function()
+                gitsigns.setqflist("all")
+            end, {
                 desc = "[Git] Show diffs (ALL) in qflist"
             })
             -- 将当前文件的差异放入 Quickfix 列表
@@ -551,14 +573,22 @@ return { -----------------------------------------------------------------------
             -- 切换行末 Blame 显示
             require("snacks").toggle({
                 name = "line blame",
-                get = function() return require("gitsigns.config").config.current_line_blame end,
-                set = function(enabled) require("gitsigns").toggle_current_line_blame(enabled) end
+                get = function()
+                    return require("gitsigns.config").config.current_line_blame
+                end,
+                set = function(enabled)
+                    require("gitsigns").toggle_current_line_blame(enabled)
+                end
             }):map("<leader>tgb")
             -- 切换单词级差异显示
             require("snacks").toggle({
                 name = "word diff",
-                get = function() return require("gitsigns.config").config.word_diff end,
-                set = function(enabled) require("gitsigns").toggle_word_diff(enabled) end
+                get = function()
+                    return require("gitsigns.config").config.word_diff
+                end,
+                set = function(enabled)
+                    require("gitsigns").toggle_word_diff(enabled)
+                end
             }):map("<leader>tgw")
         end
     },
@@ -571,19 +601,50 @@ return { -----------------------------------------------------------------------
 }, {
     -- 6. Colorizer: 颜色代码高亮 (如 #FFFFFF 会直接显示对应的背景色)
     "norcalli/nvim-colorizer.lua",
-    config = function(_, _) require("colorizer").setup() end
+    config = function(_, _)
+        require("colorizer").setup()
+    end
 }, {
     -- 7. Showkeys: 在屏幕上实时显示你按下的按键 (适合录屏或演示)
     "nvzone/showkeys",
+    event = "VeryLazy", -- 改为 VeryLazy，这样插件会在启动时加载
     cmd = "ShowkeysToggle",
+    keys = {{
+        "<leader>tk",
+        "<CMD>ShowkeysToggle<CR>",
+        mode = "n",
+        desc = "[Showkeys] Toggle showkeys"
+    }},
     opts = {
-        maxkeys = 5 -- 最多同时显示 5 个按键
-    }
+        timeout = 1, -- 按键显示持续时间（秒）
+        maxkeys = 5, -- 最多同时显示 5 个按键
+        show_count = true, -- 显示按键次数
+        position = "bottom-right", -- 显示位置
+
+        -- 关键配置：显示修饰键
+        keyformat = {
+            ["<BS>"] = "󰁮 ",
+            ["<CR>"] = "󰘌",
+            ["<Space>"] = "󱁐",
+            ["<Tab>"] = "󰌒",
+            ["<Esc>"] = "Esc",
+            ["<NL>"] = "NL",
+            ["<Up>"] = "↑",
+            ["<Down>"] = "↓",
+            ["<Left>"] = "←",
+            ["<Right>"] = "→"
+        }
+    },
+    config = function(_, opts)
+        require("showkeys").setup(opts)
+        -- 默认启用 showkeys
+        vim.defer_fn(function()
+            vim.cmd("ShowkeysToggle")
+        end, 100)
+    end
 }, -- TODO: 稍后在配置 LSP 代码操作时进行详细配置
-{
-    -- 8. Lightbulb: 当当前行有可用的 LSP 代码操作 (Code Action) 时显示灯泡图标
-    "kosayoda/nvim-lightbulb"
-}, {
+{ -- 8. Lightbulb: 当当前行有可用的 LSP 代码操作 (Code Action) 时显示灯泡图标
+"kosayoda/nvim-lightbulb"}, {
     -- 9. Tiny Code Action: 提供一个更漂亮、更现代的 LSP 代码操作选择菜单
     "rachartier/tiny-code-action.nvim",
     dependencies = {{"nvim-lua/plenary.nvim"}, {
@@ -600,7 +661,9 @@ return { -----------------------------------------------------------------------
     dependencies = {"kevinhwang91/promise-async"},
     opts = {
         -- 折叠提供者选择器：优先使用 treesitter，其次是缩进 (indent)
-        provider_selector = function(_, _, _) return {"treesitter", "indent"} end,
+        provider_selector = function(_, _, _)
+            return {"treesitter", "indent"}
+        end,
 
         open_fold_hl_timeout = 0,
         -- 自定义折叠虚拟文本：在折叠行末尾显示该折叠包含的行数
@@ -650,7 +713,9 @@ return { -----------------------------------------------------------------------
         require("ufo").setup(opts)
         -- 自动命令：在读取缓冲区前初始化折叠层级变量
         vim.api.nvim_create_autocmd("BufReadPre", {
-            callback = function() vim.b.ufo_foldlevel = 0 end
+            callback = function()
+                vim.b.ufo_foldlevel = 0
+            end
         })
 
         -- 设置当前缓冲区的折叠层级
@@ -674,27 +739,43 @@ return { -----------------------------------------------------------------------
         -- K: 如果在折叠处则预览折叠内容，否则触发 LSP 悬浮文档 (Hover)
         vim.keymap.set("n", "K", function()
             local winid = require("ufo").peekFoldedLinesUnderCursor()
-            if not winid then vim.lsp.buf.hover() end
+            if not winid then
+                vim.lsp.buf.hover()
+            end
         end)
 
         -- zM: 关闭所有折叠
         -- stylua: ignore
-        vim.keymap.set("n", "zM", function() set_buf_foldlevel(0) end, { desc = "[UFO] Close all folds" })
+        vim.keymap.set("n", "zM", function()
+            set_buf_foldlevel(0)
+        end, {
+            desc = "[UFO] Close all folds"
+        })
         -- zR: 打开所有折叠
-        vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "[UFO] Open all folds" })
+        vim.keymap.set("n", "zR", require("ufo").openAllFolds, {
+            desc = "[UFO] Open all folds"
+        })
 
         -- zm: 折叠更多 (层级递减)
         vim.keymap.set("n", "zm", function()
             local count = vim.v.count
-            if count == 0 then count = 1 end
+            if count == 0 then
+                count = 1
+            end
             change_buf_foldlevel_by(-count)
-        end, { desc = "[UFO] Fold More" })
+        end, {
+            desc = "[UFO] Fold More"
+        })
         -- zr: 折叠更少 (层级递增)
         vim.keymap.set("n", "zr", function()
             local count = vim.v.count
-            if count == 0 then count = 1 end
+            if count == 0 then
+                count = 1
+            end
             change_buf_foldlevel_by(count)
-        end, { desc = "[UFO] Fold Less" })
+        end, {
+            desc = "[UFO] Fold Less"
+        })
 
         -- zS: 设置具体的折叠层级 (配合数字使用，如 2zS)
         vim.keymap.set("n", "zS", function()
@@ -703,11 +784,19 @@ return { -----------------------------------------------------------------------
             else
                 set_buf_foldlevel(vim.v.count)
             end
-        end, { desc = "[UFO] Set foldlevel" })
+        end, {
+            desc = "[UFO] Set foldlevel"
+        })
 
         -- 禁用一些与 UFO 不兼容或冲突的默认折叠快捷键
-        vim.keymap.set("n", "zE", "<NOP>", { desc = "Disabled" })
-        vim.keymap.set("n", "zx", "<NOP>", { desc = "Disabled" })
-        vim.keymap.set("n", "zX", "<NOP>", { desc = "Disabled" })
+        vim.keymap.set("n", "zE", "<NOP>", {
+            desc = "Disabled"
+        })
+        vim.keymap.set("n", "zx", "<NOP>", {
+            desc = "Disabled"
+        })
+        vim.keymap.set("n", "zX", "<NOP>", {
+            desc = "Disabled"
+        })
     end
 }}

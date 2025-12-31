@@ -115,10 +115,11 @@ return {{
                 vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, {
                     desc = "[LSP] Remove workspace folder"
                 })
-                vim.keymap.set("n", "<leader>wl",
-                    function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, {
-                        desc = "[LSP] List workspace folders"
-                    })
+                vim.keymap.set("n", "<leader>wl", function()
+                    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+                end, {
+                    desc = "[LSP] List workspace folders"
+                })
                 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {
                     buffer = ev.buf,
                     desc = "[LSP] Rename"
@@ -130,7 +131,9 @@ return {{
         -- 在加载 lspconfig 之前拦截 notify，过滤掉特定的 warning
         local _notify = vim.notify
         vim.notify = function(msg, ...)
-            if msg:match("The `require%('lspconfig'%)` \"framework\" is deprecated") then return end
+            if msg:match("The `require%('lspconfig'%)` \"framework\" is deprecated") then
+                return
+            end
             _notify(msg, ...)
         end
 
@@ -205,6 +208,7 @@ return {{
         formatters_by_ft = {
             lua = {"stylua"},
             zig = {"zigfmt"},
+            cpp = {"clangd"},
             -- Use the "_" filetype to run formatters on filetypes that don't
             -- have other formatters configured.
             ["_"] = {"trim_whitespace"}
@@ -268,11 +272,27 @@ return {{
         "<leader>gq",
         "<CMD>Trouble qflist toggle<CR>",
         desc = "[Trouble] Quickfix List"
-    } -- { "grr", "<CMD>Trouble lsp_references focus=true<CR>",         mode = { "n" }, desc = "[Trouble] LSP references"                        },
-    -- { "gD", "<CMD>Trouble lsp_declarations focus=true<CR>",        mode = { "n" }, desc = "[Trouble] LSP declarations"                      },
-    -- { "gd", "<CMD>Trouble lsp_type_definitions focus=true<CR>",    mode = { "n" }, desc = "[Trouble] LSP type definitions"                  },
-    -- { "gri", "<CMD>Trouble lsp_implementations focus=true<CR>",    mode = { "n" }, desc = "[Trouble] LSP implementations"                   },
-    },
+    }, {
+        "grr",
+        "<CMD>Trouble lsp_references focus=true<CR>",
+        mode = {"n"},
+        desc = "[Trouble] LSP references"
+    }, {
+        "gD",
+        "<CMD>Trouble lsp_declarations focus=true<CR>",
+        mode = {"n"},
+        desc = "[Trouble] LSP declarations"
+    }, {
+        "gd",
+        "<CMD>Trouble lsp_type_definitions focus=true<CR>",
+        mode = {"n"},
+        desc = "[Trouble] LSP type definitions"
+    }, {
+        "gri",
+        "<CMD>Trouble lsp_implementations focus=true<CR>",
+        mode = {"n"},
+        desc = "[Trouble] LSP implementations"
+    }},
 
     specs = {
         "folke/snacks.nvim",
