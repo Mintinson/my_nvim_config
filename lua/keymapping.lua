@@ -16,3 +16,13 @@ vim.keymap.set("n", "<D-l>", "<C-w>l", { desc = "Go to right window" })
 
 vim.keymap.set("n", "<A-z>", "<CMD>set wrap!<CR>", { desc = "Toggle line wrap" })
 
+-- 查看当前 buffer 的 LSP 客户端信息
+vim.keymap.set("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "[LSP] Info" })
+
+-- 查看 LSP 日志
+vim.keymap.set("n", "<leader>ll", "<cmd>lua vim.cmd('e ' .. vim.lsp.get_log_path())<cr>", { desc = "[LSP] Log" })
+
+-- LSP 代码操作
+vim.keymap.set({ "n", "x" }, "<leader>ca", function()
+	require("tiny-code-action").code_action()
+end, { noremap = true, silent = true , desc = "Code Action" })
