@@ -46,6 +46,26 @@ return {{
         completion = {
             documentation = {
                 auto_show = true
+            },
+            -- menu 配置应该在 completion 内部
+            menu = {
+                draw = {
+                    columns = {{"kind_icon"}, {
+                        "label",
+                        gap = 1
+                    }},
+                    components = {
+                        label = {
+                            width = { fill = true, max = 60 },
+                            text = function(ctx)
+                                return require('colorful-menu').blink_components_text(ctx)
+                            end,
+                            highlight = function(ctx)
+                                return require('colorful-menu').blink_components_highlight(ctx)
+                            end
+                        }
+                    }
+                }
             }
         },
 
@@ -55,28 +75,6 @@ return {{
                     auto_show = true
                 }
             }
-        },
-
-        menu = {
-            draw = {
-                columns = {{"kind_icon"}, {
-                    "label",
-                    gap = 1
-                }},
-                components = {
-                    -- [修复] 必须指定宽度，否则可能会导致渲染异常
-                        width = { fill = true, max = 60 },
-                    label = {
-                        text = function(ctx)
-                            return require('colorful-menu').blink_components_text(ctx)
-                        end,
-                        highlight = function(ctx)
-                            return require('colorful-menu').blink_components_highlight(ctx)
-                        end
-                    }
-                }
-            }
-
         },
 
         -- Default list of enabled providers defined so that you can extend it
@@ -92,6 +90,7 @@ return {{
                 end
             end,
 
+            -- 所有 provider 配置都应该在 providers 内部
             providers = {
                 -- lazydev = {
                 --     name = "LazyDev",
@@ -105,49 +104,40 @@ return {{
                     score_offset = 100,
                     async = true,
                     opts = {
-                        kind_icon = "",
+                        kind_icon = "",
                         kind_hl = "DevIconCopilot"
                     }
+                },
+                path = {
+                    score_offset = 95,
+                    opts = {
+                        get_cwd = function(_)
+                            return vim.fn.getcwd()
+                        end
+                    }
+                },
+                buffer = {
+                    score_offset = 20
+                },
+                lsp = {
+                    -- Filter text items from the LSP provider, since we have the buffer provider for that
+                    transform_items = function(_, items)
+                        return vim.tbl_filter(function(item)
+                            return item.kind ~= require("blink.cmp.types").CompletionItemKind.Text
+                        end, items)
+                    end,
+                    score_offset = 60,
+                    fallbacks = {"buffer"}
+                },
+                -- Hide snippets after trigger character
+                snippets = {
+                    score_offset = 70,
+                    should_show_items = function(ctx)
+                        return ctx.trigger.initial_kind ~= "trigger_character"
+                    end,
+                    fallbacks = {"buffer"}
                 }
-            },
-            path = {
-                score_offset = 95,
-                opts = {
-                    get_cwd = function(_)
-                        return vim.fn.getcwd()
-                    end
-                }
-            },
-            buffer = {
-                score_offset = 20
-            },
-            lsp = {
-                -- Default
-                -- Filter text items from the LSP provider, since we have the buffer provider for that
-                transform_items = function(_, items)
-                    return vim.tbl_filter(function(item)
-                        return item.kind ~= require("blink.cmp.types").CompletionItemKind.Text
-                    end, items)
-                end,
-                score_offset = 60,
-                fallbacks = {"buffer"}
-            },
-            -- Hide snippets after trigger character
-            -- Trigger characters are defined by the sources. For example, for Lua, the trigger characters are ., ", '.
-            snippets = {
-                score_offset = 70,
-                should_show_items = function(ctx)
-                    return ctx.trigger.initial_kind ~= "trigger_character"
-                end,
-                fallbacks = {"buffer"}
             }
-            -- cmdline = {
-            --     min_keyword_length = 2,
-            --     -- Ignores cmdline completions when executing shell commands
-            --     enabled = function()
-            --         return vim.fn.getcmdtype() ~= ":" or not vim.fn.getcmdline():match("^[%%0-9,'<>%-]*!")
-            --     end
-            -- }
         },
 
         -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance

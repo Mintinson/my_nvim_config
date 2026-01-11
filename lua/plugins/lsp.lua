@@ -184,6 +184,14 @@ return {
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 				callback = function(ev)
+					local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+					-- 自动为所有支持 inlay hints 的 LSP 配置（默认关闭）
+					if client and client.server_capabilities.inlayHintProvider then
+						-- 默认关闭，通过快捷键手动开启
+						vim.lsp.inlay_hint.enable(false, { bufnr = ev.buf })
+					end
+
 					-- vim.keymap.set("n", "K", vim.lsp.buf.hover) -- configured in "nvim-ufo" plugin
 					vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, {
 						buffer = ev.buf,
@@ -205,7 +213,15 @@ return {
 					vim.keymap.set("n", "<leader>wl", function()
 						print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 					end, { desc = "[LSP] List workspace folders" })
+
 					vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = ev.buf, desc = "[LSP] Rename" })
+
+					-- 切换 inlay hints 的快捷键（统一处理所有 LSP）
+					vim.keymap.set("n", "<leader>th", function()
+						local current_state = vim.lsp.inlay_hint.is_enabled({ bufnr = ev.buf })
+						vim.lsp.inlay_hint.enable(not current_state, { bufnr = ev.buf })
+						print(string.format("Inlay hints %s", not current_state and "enabled" or "disabled"))
+					end, { buffer = ev.buf, desc = "[LSP] Toggle inlay hints" })
 				end,
 			})
 		end,
@@ -241,9 +257,9 @@ return {
 		},
 		opts = {
 			formatters_by_ft = {
-				lua = { "stylua" },
-				zig = { "zigfmt" },
-				cpp = { "clangd" },
+				-- lua = { "stylua" },
+				-- zig = { "zigfmt" },
+				-- cpp = { "clangd" },
 				-- Use the "_" filetype to run formatters on filetypes that don't
 				-- have other formatters configured.
 				["_"] = { "trim_whitespace" },
@@ -319,8 +335,15 @@ return {
         "<CMD>Trouble lsp_declarations focus=true<CR>",
         mode = {"n"},
         desc = "[Trouble] LSP declarations"
-    }, {
+    },  
+	    {
         "gd",
+        "<CMD>Trouble lsp_definitions focus=true<CR>",  -- ✅ 修复：改为 definitions
+        mode = {"n"},
+        desc = "[Trouble] Go to definition"
+    },
+	   {
+        "gt",  -- 新增：类型定义改用 gt
         "<CMD>Trouble lsp_type_definitions focus=true<CR>",
         mode = {"n"},
         desc = "[Trouble] LSP type definitions"
@@ -397,21 +420,21 @@ return {
 			require("lualine").setup(opts)
 		end,
 	},
-{
-    "j-hui/fidget.nvim",
-    event = "LspAttach",
-    opts = {
-        notification = {
-            window = {
-                winblend = 0,
-                border = "rounded",
-            },
-        },
-        progress = {
-            display = {
-                done_icon = "✓",
-            },
-        },
-    },
-}
+	{
+		"j-hui/fidget.nvim",
+		event = "LspAttach",
+		opts = {
+			notification = {
+				window = {
+					winblend = 0,
+					border = "rounded",
+				},
+			},
+			progress = {
+				display = {
+					done_icon = "✓",
+				},
+			},
+		},
+	},
 }
