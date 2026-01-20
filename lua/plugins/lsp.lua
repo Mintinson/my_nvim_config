@@ -1,103 +1,4 @@
 return {
-	-- {
-	-- 	"williamboman/mason.nvim",
-	-- 	dependencies = { "williamboman/mason-lspconfig.nvim", "neovim/nvim-lspconfig", "saghen/blink.cmp" },
-	-- 	config = function()
-	-- 		vim.diagnostic.config({
-	-- 			underline = false,
-	-- 			signs = false,
-	-- 			update_in_insert = false,
-	-- 			virtual_text = {
-	-- 				spacing = 2,
-	-- 				prefix = "●",
-	-- 			},
-	-- 			severity_sort = true,
-	-- 			float = {
-	-- 				border = "rounded",
-	-- 			},
-	-- 		})
-
-	-- 		vim.api.nvim_create_autocmd("LspAttach", {
-	-- 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-	-- 			callback = function(ev)
-	-- 				-- vim.keymap.set("n", "K", vim.lsp.buf.hover) -- configured in "nvim-ufo" plugin
-	-- 				vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, {
-	-- 					buffer = ev.buf,
-	-- 					desc = "[LSP] Show diagnostic",
-	-- 				})
-	-- 				vim.keymap.set("n", "<leader>gk", vim.lsp.buf.signature_help, {
-	-- 					desc = "[LSP] Signature help",
-	-- 				})
-	-- 				vim.keymap.set("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, {
-	-- 					desc = "[LSP] Add workspace folder",
-	-- 				})
-	-- 				vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, {
-	-- 					desc = "[LSP] Remove workspace folder",
-	-- 				})
-	-- 				vim.keymap.set("n", "<leader>wl", function()
-	-- 					print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-	-- 				end, {
-	-- 					desc = "[LSP] List workspace folders",
-	-- 				})
-	-- 				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {
-	-- 					buffer = ev.buf,
-	-- 					desc = "[LSP] Rename",
-	-- 				})
-	-- 			end,
-	-- 		})
-
-	-- 		-- === 1. 屏蔽 0.11+ 的废弃警告 ===
-	-- 		-- 在加载 lspconfig 之前拦截 notify，过滤掉特定的 warning
-	-- 		local _notify = vim.notify
-	-- 		vim.notify = function(msg, ...)
-	-- 			if msg:match("The `require%('lspconfig'%)` \"framework\" is deprecated") then
-	-- 				return
-	-- 			end
-	-- 			_notify(msg, ...)
-	-- 		end
-
-	-- 		-- === 2. 初始化 Mason ===
-	-- 		require("mason").setup()
-
-	-- 		-- === 3. 使用 mason-lspconfig 自动处理 ===
-	-- 		-- 这是业界标准做法，它会自动处理 Mason 二进制文件的路径问题
-	-- 		require("mason-lspconfig").setup({
-	-- 			ensure_installed = { "lua_ls", "clangd" }, -- 确保安装
-	-- 			handlers = { -- 默认处理器：对所有安装的 server 自动调用 setup
-	-- 				function(server_name)
-	-- 					local capabilities = require("blink.cmp").get_lsp_capabilities()
-
-	-- 					-- 针对特定语言的特殊配置
-	-- 					local opts = {
-	-- 						capabilities = capabilities,
-	-- 					}
-
-	-- 					-- Lua 特别配置
-	-- 					if server_name == "lua_ls" then
-	-- 						opts.settings = {
-	-- 							Lua = {
-	-- 								diagnostics = {
-	-- 									globals = { "vim" },
-	-- 								},
-	-- 								workspace = {
-	-- 									checkThirdParty = false,
-	-- 									library = { vim.env.VIMRUNTIME },
-	-- 								},
-	-- 							},
-	-- 						}
-	-- 					end
-
-	-- 					-- 调用 setup (虽然这会触发 warning，但上面的代码已经屏蔽了它)
-	-- 					-- 这样既能享受 Mason 的路径自动管理，又没有报错
-	-- 					require("lspconfig")[server_name].setup(opts)
-	-- 				end,
-	-- 			},
-	-- 		})
-	-- 	end,
-
-	-- 	-- 配置解耦：如果以后想加 pyright 或 clangd，只需要在 ensure_installed
-	-- 	-- 里加名字，下面会自动生效，不需要每次都手写一遍 vim.lsp.config。
-	-- },
 	{
 		"williamboman/mason.nvim",
 		opts = {
@@ -132,38 +33,52 @@ return {
 			ensure_installed = {},
 			-- 自动设置已安装的 LSP
 			automatic_installation = true,
+            handlers = {
+                -- 默认 handler：为所有 LSP 调用 setup（带 blink.cmp capabilities）
+                function(server_name)
+                    local capabilities = require("blink.cmp").get_lsp_capabilities()
+                    require("lspconfig")[server_name].setup({
+                        capabilities = capabilities,
+                    })
+                end,
+            },
 			-- handlers: 自动为所有已安装的 LSP 调用 setup
-			handlers = {
-				-- 默认处理器
-				function(server_name)
-					local capabilities = require("blink.cmp").get_lsp_capabilities()
-					require("lspconfig")[server_name].setup({
-						capabilities = capabilities,
-					})
-				end,
+			-- handlers = {
+			-- 	-- 默认处理器
+			-- 	function(server_name)
+			-- 		local capabilities = require("blink.cmp").get_lsp_capabilities()
+			-- 		require("lspconfig")[server_name].setup({
+			-- 			capabilities = capabilities,
+			-- 		})
+			-- 	end,
 
-				-- Lua 特殊配置
-				["lua_ls"] = function()
-					local capabilities = require("blink.cmp").get_lsp_capabilities()
-					require("lspconfig").lua_ls.setup({
-						capabilities = capabilities,
-						settings = {
-							Lua = {
-								diagnostics = { globals = { "vim" } },
-								workspace = {
-									checkThirdParty = false,
-									library = { vim.env.VIMRUNTIME },
-								},
-							},
-						},
-					})
-				end,
-			},
+			-- 	-- Lua 特殊配置
+			-- 	["lua_ls"] = function()
+			-- 		local capabilities = require("blink.cmp").get_lsp_capabilities()
+			-- 		require("lspconfig").lua_ls.setup({
+			-- 			capabilities = capabilities,
+			-- 			settings = {
+			-- 				Lua = {
+			-- 					diagnostics = { globals = { "vim" } },
+			-- 					workspace = {
+			-- 						checkThirdParty = false,
+			-- 						library = { vim.env.VIMRUNTIME },
+			-- 					},
+			-- 				},
+			-- 			},
+			-- 		})
+			-- 	end,
+			-- },
 		},
-		opts_extend = { "ensure_installed" },
+		-- opts_extend = { "ensure_installed" },
+		-- config = function(_, opts)
+        --     require("mason-lspconfig").setup(opts)
+        -- end,
+		opts_extend = { "ensure_installed", "handlers" },
 	},
 	{
 		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = { "saghen/blink.cmp", "williamboman/mason.nvim" },
 
 		-- example calling setup directly for each LSP
@@ -176,7 +91,25 @@ return {
 				severity_sort = true,
 				float = {
 					border = "rounded",
+					-- border = "rounded",
+					-- 智能定位：自动根据光标位置调整浮动窗口
+					anchor_bias = "auto",  -- 自动选择最佳锚点
 				},
+			})
+			-- 配置 LSP 悬浮窗口的全局行为
+			vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+				border = "rounded",
+				-- 智能定位配置
+				anchor_bias = "auto",
+				max_width = 80,
+				max_height = 20,
+			})
+
+			vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+				border = "rounded",
+				anchor_bias = "auto",
+				max_width = 80,
+				max_height = 20,
 			})
 
 			-- Use LspAttach autocommand to only map the following keys

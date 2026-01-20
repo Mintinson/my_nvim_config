@@ -42,3 +42,49 @@ vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelDown>", "<C-e>", { desc = "Scroll
 -- 每次滚动 2 行（介于默认 3 行和 1 行之间）
 -- vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelUp>", "<C-y><C-y>", { desc = "Scroll up 2 lines" })
 -- vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelDown>", "<C-e><C-e>", { desc = "Scroll down 2 lines" })
+
+-- 重载配置
+-- 安全的配置重载（避免 lazy.nvim 警告）
+vim.keymap.set("n", "<leader>rr", function()
+    -- 只重载非插件管理器的配置文件
+    vim.cmd("source " .. vim.fn.stdpath("config") .. "/lua/keymapping.lua")
+    
+    -- 清除特定 Lua 模块缓存（不包括 config.lazy）
+    for name, _ in pairs(package.loaded) do
+        if name:match("^plugins") then
+            package.loaded[name] = nil
+        end
+    end
+    
+    vim.notify("Keymaps and settings reloaded! Use :Lazy reload for plugins.", vim.log.levels.INFO)
+end, { desc = "Reload configuration (safe)" })
+
+-- 重载当前编辑的文件（用于调试单个配置文件）
+vim.keymap.set("n", "<leader>rs", "<cmd>source %<cr>", { desc = "Source current file" })
+
+-- 快速访问 Lazy 插件管理器
+vim.keymap.set("n", "<leader>rp", "<cmd>Lazy<cr>", { desc = "Open Lazy.nvim" })
+
+-- 清理 LSP 日志
+vim.keymap.set("n", "<leader>lc", function()
+    local log_path = vim.lsp.get_log_path()
+    local file = io.open(log_path, "w")
+    if file then
+        file:close()
+        vim.notify("LSP log cleared: " .. log_path, vim.log.levels.INFO)
+    else
+        vim.notify("Failed to clear LSP log", vim.log.levels.ERROR)
+    end
+end, { desc = "[LSP] Clear log" })
+
+-- 查看日志大小
+vim.keymap.set("n", "<leader>ls", function()
+    local log_path = vim.lsp.get_log_path()
+    local stat = vim.uv.fs_stat(log_path)
+    if stat then
+        local size_mb = stat.size / 1024 / 1024
+        vim.notify(string.format("LSP log size: %.2f MB\nPath: %s", size_mb, log_path), vim.log.levels.INFO)
+    else
+        vim.notify("LSP log not found", vim.log.levels.WARN)
+    end
+end, { desc = "[LSP] Log size" })

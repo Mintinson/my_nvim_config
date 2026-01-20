@@ -13,6 +13,9 @@ vim.opt.listchars = {
   nbsp = "␣",
 }
 
+-- 与系统剪贴板同步（不同 Neovim 进程共享）
+vim.opt.clipboard = "unnamedplus"
+
 vim.opt.ignorecase = true  -- 搜索时忽略大小写 (搜 "abc" 能搜到 "ABC")
 vim.opt.smartcase = true   -- 智能大小写 (如果你输入了包含大写字母的 "Abc"，则强制区分大小写；全小写则忽略大小写)
 vim.opt.hlsearch = true    -- 高亮搜索结果 (搜索后，所有匹配项变成黄色背景)
