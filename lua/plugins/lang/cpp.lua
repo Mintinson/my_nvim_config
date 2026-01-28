@@ -1,4 +1,8 @@
--- C/C++ language configuration
+-- ============================================================================
+-- C/C++ 语言配置
+-- 使用 Neovim 0.11+ vim.lsp.config() API
+-- ============================================================================
+
 return {
     -- Treesitter: 语法高亮和代码解析
     {
@@ -10,17 +14,15 @@ return {
         opts_extend = { "ensure_installed" },
     },
 
-    -- Mason-LSPConfig: LSP 服务器安装和自动配置
+    -- Mason-LSPConfig: LSP 服务器安装
     {
         "williamboman/mason-lspconfig.nvim",
         optional = true,
         opts = {
-            ensure_installed = { "clangd" }, -- C/C++ Language Server
+            ensure_installed = { "clangd" },
         },
         opts_extend = { "ensure_installed" },
     },
-
-    
 
     -- Mason: 安装其他工具（formatter, debugger 等）
     {
@@ -28,9 +30,8 @@ return {
         optional = true,
         opts = {
             ensure_installed = {
-                "clang-format", -- C/C++ 代码格式化工具
-                -- "clang-tidy",   -- （用于 linting）
-                "codelldb",     -- C/C++ debugger (可选)
+                "clang-format",
+                "codelldb", -- C/C++ debugger
             },
         },
         opts_extend = { "ensure_installed" },
@@ -48,80 +49,44 @@ return {
         },
     },
 
-    -- LSPConfig: clangd 特殊配置（可选）
-    -- {
-    --     "neovim/nvim-lspconfig",
-    --     optional = true,
-    --     opts = function(_, opts)
-    --         -- 如果需要自定义 clangd 配置，可以在这里添加
-    --         opts.servers = opts.servers or {}
-    --         opts.servers.clangd = {
-    --             cmd = {
-    --                 "clangd",
-    --                 "--background-index",
-    --                 "--clang-tidy",
-    --                 "--header-insertion=iwyu",
-    --                 "--completion-style=detailed",
-    --                 "--function-arg-placeholders",
-    --                 "--header-insertion-decorators", -- 显示头文件插入提示
-    --             },
-    --             init_options = {
-    --                 clangdFileStatus = true,
-    --                 usePlaceholders = true,
-    --                 completeUnimported = true,
-    --                 semanticHighlighting = true,
-    --             },
-
-    --         }
-    --         return opts
-    --     end,
-    -- },
-
-    -- clangd LSP 配置
+    -- clangd LSP 配置 (Neovim 0.11+)
     {
         "neovim/nvim-lspconfig",
         optional = true,
-        init = function()
-            vim.api.nvim_create_autocmd("FileType", {
-                pattern = { "c", "cpp", "objc", "objcpp", "cuda" },
-                callback = function(ev)
-                    local clients = vim.lsp.get_clients({ bufnr = ev.buf, name = "clangd" })
-                    if #clients > 0 then
-                        return
-                    end
-
-                    local capabilities = require("blink.cmp").get_lsp_capabilities()
-                    vim.lsp.start({
-                        name = "clangd",
-                        cmd = {
-                            "clangd",
-                            "--background-index",
-                            "--clang-tidy",
-                            "--header-insertion=iwyu",
-                            "--header-insertion-decorators",
-                            "--completion-style=detailed",
-                            -- "--argument-lists=delimiters",
-                            "--function-arg-placeholders",
-                        },
-                        root_dir = vim.fs.root(ev.buf, {
-                            ".clangd",
-                            ".clang-tidy",
-                            ".clang-format",
-                            "compile_commands.json",
-                            "compile_flags.txt",
-                            ".git",
-                        }),
-                        capabilities = capabilities,
-                        init_options = {
-                            clangdFileStatus = true,
-                            -- usePlaceholders = false,
-                            -- completeUnimported = true,
-                            semanticHighlighting = true,
-                            fallbackFlags = { "-std=c++20" },
-                        },
-                    })
-                end,
+        opts = function()
+            -- 使用 vim.lsp.config() 配置 clangd
+            -- 这会与全局 "*" 配置自动合并
+            vim.lsp.config("clangd", {
+                cmd = {
+                    "clangd",
+                    "--background-index",
+                    "--clang-tidy",
+                    "--header-insertion=iwyu",
+                    "--header-insertion-decorators",
+                    "--completion-style=detailed",
+                    "--function-arg-placeholders=0",
+                    "--experimental-modules-support"
+                },
+                filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+                root_markers = {
+                    ".clangd",
+                    ".clang-tidy",
+                    ".clang-format",
+                    "compile_commands.json",
+                    "compile_flags.txt",
+                    ".git",
+                },
+                init_options = {
+                    clangdFileStatus = true,
+                    usePlaceholders = true,
+                    completeUnimported = true,
+                    semanticHighlighting = true,
+                    fallbackFlags = { "-std=c++20" },
+                },
             })
+
+            -- 启用 clangd
+            vim.lsp.enable("clangd")
         end,
     },
 }

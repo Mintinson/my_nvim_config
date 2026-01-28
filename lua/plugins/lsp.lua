@@ -1,4 +1,11 @@
+-- ============================================================================
+-- LSP 全局配置 (Neovim 0.11+)
+-- 本文件只包含语言无关的 LSP 基础能力配置
+-- 语言特定配置请放在 lang/xxx.lua 中
+-- ============================================================================
+
 return {
+	-- Mason: 工具安装管理器
 	{
 		"williamboman/mason.nvim",
 		opts = {
@@ -24,65 +31,40 @@ return {
 			end
 		end,
 	},
-	{
-		-- mason-lspconfig: 自动连接 Mason 和 lspconfig
-		"williamboman/mason-lspconfig.nvim",
-		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig", "saghen/blink.cmp" },
-		opts = {
-			-- 确保安装的 LSP 服务器（会自动安装）
-			ensure_installed = {},
-			-- 自动设置已安装的 LSP
-			automatic_installation = true,
-            handlers = {
-                -- 默认 handler：为所有 LSP 调用 setup（带 blink.cmp capabilities）
-                function(server_name)
-                    local capabilities = require("blink.cmp").get_lsp_capabilities()
-                    require("lspconfig")[server_name].setup({
-                        capabilities = capabilities,
-                    })
-                end,
-            },
-			-- handlers: 自动为所有已安装的 LSP 调用 setup
-			-- handlers = {
-			-- 	-- 默认处理器
-			-- 	function(server_name)
-			-- 		local capabilities = require("blink.cmp").get_lsp_capabilities()
-			-- 		require("lspconfig")[server_name].setup({
-			-- 			capabilities = capabilities,
-			-- 		})
-			-- 	end,
 
-			-- 	-- Lua 特殊配置
-			-- 	["lua_ls"] = function()
-			-- 		local capabilities = require("blink.cmp").get_lsp_capabilities()
-			-- 		require("lspconfig").lua_ls.setup({
-			-- 			capabilities = capabilities,
-			-- 			settings = {
-			-- 				Lua = {
-			-- 					diagnostics = { globals = { "vim" } },
-			-- 					workspace = {
-			-- 						checkThirdParty = false,
-			-- 						library = { vim.env.VIMRUNTIME },
-			-- 					},
-			-- 				},
-			-- 			},
-			-- 		})
-			-- 	end,
-			-- },
+	-- Mason-lspconfig: 仅用于自动安装 LSP 服务器
+	-- 注意：不再使用 handlers 来配置 LSP，改用 vim.lsp.config()
+	{
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = { "williamboman/mason.nvim" },
+		opts = {
+			ensure_installed = {},
+			automatic_installation = true,
+			-- 不再使用 handlers，LSP 配置由 vim.lsp.config() 负责
 		},
-		-- opts_extend = { "ensure_installed" },
-		-- config = function(_, opts)
-        --     require("mason-lspconfig").setup(opts)
-        -- end,
-		opts_extend = { "ensure_installed", "handlers" },
+		opts_extend = { "ensure_installed" },
 	},
+
+	-- LSP 全局基础配置
 	{
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = { "saghen/blink.cmp", "williamboman/mason.nvim" },
-
-		-- example calling setup directly for each LSP
 		config = function()
+			-- ================================================================
+			-- 全局 LSP 默认配置 (Neovim 0.11+ vim.lsp.config)
+			-- 所有 LSP 服务器都会继承这些配置
+			-- ================================================================
+			vim.lsp.config("*", {
+				-- 全局 capabilities（包含 blink.cmp 的补全能力）
+				capabilities = require("blink.cmp").get_lsp_capabilities(),
+				-- 全局 root_markers（通用项目根目录标识）
+				root_markers = { ".git", ".editorconfig" },
+			})
+
+			-- ================================================================
+			-- Diagnostics 全局配置
+			-- ================================================================
 			vim.diagnostic.config({
 				underline = false,
 				signs = false,
@@ -91,15 +73,15 @@ return {
 				severity_sort = true,
 				float = {
 					border = "rounded",
-					-- border = "rounded",
-					-- 智能定位：自动根据光标位置调整浮动窗口
-					anchor_bias = "auto",  -- 自动选择最佳锚点
+					anchor_bias = "auto",
 				},
 			})
-			-- 配置 LSP 悬浮窗口的全局行为
+
+			-- ================================================================
+			-- LSP Handlers 全局配置（hover, signature help 等）
+			-- ================================================================
 			vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
 				border = "rounded",
-				-- 智能定位配置
 				anchor_bias = "auto",
 				max_width = 80,
 				max_height = 20,
@@ -112,66 +94,43 @@ return {
 				max_height = 20,
 			})
 
-			-- Use LspAttach autocommand to only map the following keys
-			-- after the language server attaches to the current buffer
+			-- ================================================================
+			-- 全局 LspAttach 事件处理（通用快捷键和行为）
+			-- ================================================================
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 				callback = function(ev)
 					local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-					-- 自动为所有支持 inlay hints 的 LSP 配置（默认关闭）
+					-- Inlay hints: 默认关闭，支持手动开启
 					if client and client.server_capabilities.inlayHintProvider then
-						-- 默认关闭，通过快捷键手动开启
 						vim.lsp.inlay_hint.enable(false, { bufnr = ev.buf })
 					end
 
-					-- vim.keymap.set("n", "K", vim.lsp.buf.hover) -- configured in "nvim-ufo" plugin
-					vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, {
-						buffer = ev.buf,
-						desc = "[LSP] Show diagnostic",
-					})
-					vim.keymap.set("n", "<leader>gk", vim.lsp.buf.signature_help, { desc = "[LSP] Signature help" })
-					vim.keymap.set(
-						"n",
-						"<leader>wa",
-						vim.lsp.buf.add_workspace_folder,
-						{ desc = "[LSP] Add workspace folder" }
-					)
-					vim.keymap.set(
-						"n",
-						"<leader>wr",
-						vim.lsp.buf.remove_workspace_folder,
-						{ desc = "[LSP] Remove workspace folder" }
-					)
-					vim.keymap.set("n", "<leader>wl", function()
+					-- 通用 LSP 快捷键
+					local function map(mode, lhs, rhs, desc)
+						vim.keymap.set(mode, lhs, rhs, { buffer = ev.buf, desc = desc })
+					end
+
+					map("n", "<leader>d", vim.diagnostic.open_float, "[LSP] Show diagnostic")
+					map("n", "<leader>gk", vim.lsp.buf.signature_help, "[LSP] Signature help")
+					map("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, "[LSP] Add workspace folder")
+					map("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, "[LSP] Remove workspace folder")
+					map("n", "<leader>wl", function()
 						print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-					end, { desc = "[LSP] List workspace folders" })
+					end, "[LSP] List workspace folders")
+					map("n", "<leader>rn", vim.lsp.buf.rename, "[LSP] Rename")
 
-					vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = ev.buf, desc = "[LSP] Rename" })
-
-					-- 切换 inlay hints 的快捷键（统一处理所有 LSP）
-					vim.keymap.set("n", "<leader>th", function()
+					-- Toggle inlay hints
+					map("n", "<leader>th", function()
 						local current_state = vim.lsp.inlay_hint.is_enabled({ bufnr = ev.buf })
 						vim.lsp.inlay_hint.enable(not current_state, { bufnr = ev.buf })
 						print(string.format("Inlay hints %s", not current_state and "enabled" or "disabled"))
-					end, { buffer = ev.buf, desc = "[LSP] Toggle inlay hints" })
+					end, "[LSP] Toggle inlay hints")
 				end,
 			})
 		end,
 	},
-	-- {
-	-- 	"folke/lazydev.nvim",
-	-- 	ft = "lua", -- onbly load for lua files
-	-- 	opts = {
-	-- 		library = { -- see the configuration section for more details
-	-- 			-- load luvit types when the vim.uv word is found
-	-- 			{
-	-- 				path = "${3rd}/luv/library",
-	-- 				words = { "vim%.uv" },
-	-- 			},
-	-- 		},
-	-- 	},
-	-- },
 	{
 		"stevearc/conform.nvim",
 		cmd = { "ConformInfo" },
