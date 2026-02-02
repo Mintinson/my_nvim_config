@@ -40,5 +40,5 @@ vim.g.mapleader = " "       -- 将 Leader 键设置为空格键 (Space)
 vim.g.maplocalleader = "\\" -- 将 Local Leader 设置为反斜杠 (\)
 
 require("config.lazy")
-
+-- require("config.autocmds").setup()  -- 加载自动命令配置
 require("keymapping")

@@ -3,6 +3,77 @@ return {
 		"folke/snacks.nvim",
 		priority = 1000, -- 确保此插件在其他插件之前加载，以便尽早接管 UI
 		lazy = false, -- 禁用懒加载，因为我们需要它在启动时立即生效（例如 dashboard）
+		init = function()
+            -- 禁用原生退出确认提示（由 snacks 接管）
+            vim.opt.confirm = false
+
+            -- ================================================================
+            -- 拦截 :q, :qa, :wq 等退出命令，添加保存确认
+            -- ================================================================
+            local function smart_quit(cmd, force)
+                -- 如果是强制退出命令，直接执行
+                if force then
+                    vim.cmd(cmd .. "!")
+                    return
+                end
+
+                -- 检查未保存的 buffer
+                local unsaved = {}
+                for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                    if vim.api.nvim_buf_is_loaded(buf)
+                        and vim.bo[buf].modified
+                        and vim.bo[buf].buftype == ""
+                        and vim.api.nvim_buf_get_name(buf) ~= "" then
+                        table.insert(unsaved, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t"))
+                    end
+                end
+
+                -- 没有未保存的文件，直接退出
+                if #unsaved == 0 then
+                    vim.cmd(cmd)
+                    return
+                end
+
+                -- 构建美化的文件列表
+                local file_list = ""
+                for i, name in ipairs(unsaved) do
+                    file_list = file_list .. "  󰈙 " .. name
+                    if i < #unsaved then
+                        file_list = file_list .. "\n"
+                    end
+                end
+
+                -- 弹出确认框
+                vim.ui.select({
+                    "󰆓  Save All and Quit",
+                    "󰗨  Discard All and Quit",
+                    "󰜺  Cancel",
+                }, {
+                    prompt = "󰀨 Unsaved changes in " .. #unsaved .. " file(s):\n\n" .. file_list .. "\n",
+                    kind = "confirmation",
+                }, function(choice)
+                    if choice and choice:match("Save All") then
+                        vim.cmd("silent! wall")
+                        vim.cmd(cmd)
+                    elseif choice and choice:match("Discard All") then
+                        vim.cmd(cmd .. "!")
+                    end
+                    -- Cancel 或 nil: 什么都不做
+                end)
+            end
+
+            -- 创建用户命令覆盖原生命令
+            vim.api.nvim_create_user_command("Q", function() smart_quit("q", false) end, { desc = "Smart quit" })
+            vim.api.nvim_create_user_command("Qa", function() smart_quit("qa", false) end, { desc = "Smart quit all" })
+            vim.api.nvim_create_user_command("QA", function() smart_quit("qa", false) end, { desc = "Smart quit all" })
+
+            -- 使用 cabbrev 将 :q 映射到 :Q
+            vim.cmd([[
+                cnoreabbrev <expr> q getcmdtype() == ":" && getcmdline() == "q" ? "Q" : "q"
+                cnoreabbrev <expr> qa getcmdtype() == ":" && getcmdline() == "qa" ? "Qa" : "qa"
+                cnoreabbrev <expr> qall getcmdtype() == ":" && getcmdline() == "qall" ? "Qa" : "qall"
+            ]])
+        end,
 		---@type snacks.Config
 		opts = {
 			-- 大文件处理：自动禁用某些耗资源的特性以优化大文件打开速度
@@ -11,7 +82,37 @@ return {
 			},
 			-- 启动界面：显示仪表盘
 			dashboard = {
-				enabled = true, -- 启用启动时的仪表盘界面，显示最近文件、项目等
+				enabled = true,
+				preset = {
+					-- 自定义大字 ASCII Art（header）
+					header = [[
+███╗   ███╗██╗███╗   ██╗████████╗██╗███╗   ██╗███████╗ ██████╗ ███╗   ██╗
+████╗ ████║██║████╗  ██║╚══██╔══╝██║████╗  ██║██╔════╝██╔═══██╗████╗  ██║
+██╔████╔██║██║██╔██╗ ██║   ██║   ██║██╔██╗ ██║███████╗██║   ██║██╔██╗ ██║
+██║╚██╔╝██║██║██║╚██╗██║   ██║   ██║██║╚██╗██║╚════██║██║   ██║██║╚██╗██║
+██║ ╚═╝ ██║██║██║ ╚████║   ██║   ██║██║ ╚████║███████║╚██████╔╝██║ ╚████║
+╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                         
+	 ]],
+					-- 自定义快捷键菜单
+                    keys = {
+                        { icon = "󰈞 ", key = "f", desc = "Find File", action = ":lua Snacks.picker.files()" },
+                        { icon = "󰈔 ", key = "n", desc = "New File", action = ":ene | startinsert" },
+                        { icon = "󰊄 ", key = "g", desc = "Find Text", action = ":lua Snacks.picker.grep()" },
+                        { icon = "󰋚 ", key = "r", desc = "Recent Files", action = ":lua Snacks.picker.recent()" },
+                        { icon = "󰒓 ", key = "c", desc = "Config", action = ":lua Snacks.picker.files({ cwd = vim.fn.stdpath('config') })" },
+                        { icon = "󰦛 ", key = "s", desc = "Restore Session", section = "session" },
+                        { icon = "󰏓 ", key = "p", desc = "Projects", action = ":lua Snacks.picker.projects()" },
+                        { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
+                        { icon = "󰈆 ", key = "q", desc = "Quit", action = ":qa" },
+                    },
+				},
+				-- 定义 Dashboard 布局结构
+				sections = {
+					{ section = "header" },                    -- 显示大字
+					{ section = "keys", gap = 1, padding = 1 }, -- 显示快捷键菜单
+					{ section = "startup" },                   -- 显示启动时间
+				},
 			},
 			-- 文件浏览器：当前已禁用
 			explorer = {
@@ -50,6 +151,7 @@ return {
 					enabled = true,
 				},
 			},
+			
 			-- 输入框：替换原生的 vim.ui.input
 			input = {
 				enabled = true, -- 启用 Snacks 的输入框替代原生的 vim.ui.input（用于重命名等操作）
@@ -172,6 +274,64 @@ return {
 			--     end,
 			--     desc = "[Snacks] Delete buffer"
 			-- },
+			-- ================================================================
+            -- 退出相关快捷键
+            -- ================================================================
+            {
+                "<leader>qq",
+                function()
+                    local unsaved = {}
+                    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                        if vim.api.nvim_buf_is_loaded(buf)
+                            and vim.bo[buf].modified
+                            and vim.bo[buf].buftype == ""
+                            and vim.api.nvim_buf_get_name(buf) ~= "" then
+                            table.insert(unsaved, vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t"))
+                        end
+                    end
+
+                    if #unsaved == 0 then
+                        vim.cmd("qa")
+                        return
+                    end
+
+                    -- 构建美化的文件列表
+                    local file_list = ""
+                    for i, name in ipairs(unsaved) do
+                        file_list = file_list .. "  󰈙 " .. name
+                        if i < #unsaved then
+                            file_list = file_list .. "\n"
+                        end
+                    end
+
+                    vim.ui.select({
+                        "󰆓  Save All and Quit",
+                        "󰗨  Discard All and Quit",
+                        "󰜺  Cancel",
+                    }, {
+                        prompt = "󰀨 Unsaved changes in " .. #unsaved .. " file(s):\n\n" .. file_list .. "\n",
+                        kind = "confirmation",
+                    }, function(choice)
+                        if choice and choice:match("Save All") then
+                            vim.cmd("silent! wall")
+                            vim.cmd("qa")
+                        elseif choice and choice:match("Discard All") then
+                            vim.cmd("qa!")
+                        end
+                    end)
+                end,
+                desc = "[Quit] Smart quit with save prompt",
+            },
+            {
+                "<leader>qQ",
+                "<cmd>qa!<cr>",
+                desc = "[Quit] Force quit without saving",
+            },
+            {
+                "<leader>qw",
+                "<cmd>wall | qa<cr>",
+                desc = "[Quit] Save all and quit",
+            },
 			{
 				"<leader>sv", -- 改为 <leader>sh (home)
 				function()
@@ -251,7 +411,7 @@ return {
 				desc = "[Snacks] Find files",
 			},
 			{
-				"<leader>sfd", -- 或者你可以换成 <leader>sd (search dir)
+				"<leader>Sf", -- 或者你可以换成 <leader>sd (search dir)
 				function()
 					-- 使用 Snacks 自带的 input 组件，支持路径补全
 					Snacks.input({
@@ -326,7 +486,7 @@ return {
 				desc = "[Snacks] Grep",
 			},
 			{
-				"<leader>sgd", -- 或者你可以换成 <leader>sd (search dir)
+				"<leader>Sg", -- 或者你可以换成 <leader>sd (search dir)
 				function()
 					-- 使用 Snacks 自带的 input 组件，支持路径补全
 					Snacks.input({

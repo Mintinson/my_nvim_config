@@ -13,9 +13,17 @@ return { -----------------------------------------------------------------------
 			sections = {
 				lualine_a = { "mode" }, -- 最左侧：显示当前模式 (NORMAL/INSERT)
 				lualine_b = { "branch", "diff", "diagnostics" }, -- 左二：Git分支、差异、LSP诊断错误
-				lualine_c = { "filename" }, -- 中间左侧：当前文件名
+				lualine_c = { {
+                        "filename",
+                        path = 4, -- 0: 仅文件名
+                                 -- 1: 相对路径
+                                 -- 2: 绝对路径
+                                 -- 3: 绝对路径，但家目录显示为 ~
+                                 -- 4: 仅文件名，父目录也显示
+                    }, }, -- 中间左侧：当前文件名
 				lualine_x = {}, -- 中间右侧：留空
 				lualine_y = { "encoding", "fileformat", "filetype", "progress" }, -- 右侧：编码(utf-8)、系统格式(unix)、文件类型(lua)、进度百分比
+				lualine_z = { "location" },
 			},
 			-- winbar 定义窗口顶部的“面包屑”导航栏
 			winbar = {
@@ -28,8 +36,8 @@ return { -----------------------------------------------------------------------
 						color = "Comment",
 					},
 				},
+				lualine_x = { "lsp_status" }, -- 顶部右侧：显示 LSP 加载状态
 			},
-			lualine_x = { "lsp_status" }, -- 顶部右侧：显示 LSP 加载状态
 			inactive_winbar = {
             -- Always show winbar
             -- stylua: ignore
@@ -80,7 +88,8 @@ return { -----------------------------------------------------------------------
 				color = { fg = colors.secondary },
 			}
 
-			table.insert(opts.sections.lualine_c, 1, copilot)
+			-- table.insert(opts.sections.lualine_x, 1, copilot)
+			table.insert(opts.sections.lualine_c, copilot)
 			table.insert(opts.sections.lualine_x, 1, lsp_status)
 
 			require("lualine").setup(opts)
@@ -221,13 +230,17 @@ return { -----------------------------------------------------------------------
 			},
 		},
 		opts = {
+			-- === 核心功能配置 ===
+			update_cwd = true,  -- 当目录改变时自动更新 NvimTree 的根目录
+			sync_root_with_cwd = true,  -- 同步 NvimTree 根目录与工作目录
+			respect_buf_cwd = true,  -- 尊重缓冲区的工作目录
 			filters = {
-            git_ignored = false,  -- ✅ 关键：设为 false 显示 .gitignore 中的文件
-            -- dotfiles = false,     -- 是否隐藏点文件（.开头的文件），false 表示显示
-            -- git_clean = false,    -- 是否隐藏 Git 追踪的未修改文件
-            -- custom = {},          -- 自定义过滤规则（正则表达式数组）
-        },
-		}, -- 使用默认配置
+				git_ignored = false, -- ✅ 关键：设为 false 显示 .gitignore 中的文件
+				-- dotfiles = false,     -- 是否隐藏点文件（.开头的文件），false 表示显示
+				-- git_clean = false,    -- 是否隐藏 Git 追踪的未修改文件
+				-- custom = {},          -- 自定义过滤规则（正则表达式数组）
+			},
+		},
 	}, -----------------------------------------------------------------------------
 	-- 4. Rainbow Delimiters: 彩虹括号
 	-----------------------------------------------------------------------------
@@ -356,31 +369,36 @@ return { -----------------------------------------------------------------------
 			},
 		},
 	},
-	{
-		"folke/which-key.nvim",
-		event = "VeryLazy",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		opts = {
-			---@type false | "classic" | "modern" | "helix"
-			preset = "helix",
-			win = {
-				-- no_overlap = true,
-				title = false,
-				width = 0.5,
-			},
-		},
-		keys = {
-			{
-				"<leader>?",
-				function()
-					require("which-key").show({
-						global = false,
-					})
-				end,
-				desc = "Buffer local KeyMaps (which-key)",
-			},
-		},
-	},
+    {
+        "folke/which-key.nvim",
+        event = "VeryLazy", -- 延迟加载：等 Neovim 启动完成后再加载，提升启动速度
+        dependencies = { "nvim-tree/nvim-web-devicons" }, -- 依赖图标库，让菜单显示漂亮的图标
+        opts = {
+            ---@type false | "classic" | "modern" | "helix"
+            preset = "helix", -- 使用 Helix 编辑器风格的布局 (水平分栏显示按键)
+                              -- "classic": 传统垂直列表
+                              -- "modern": 现代风格，带图标
+                              -- "helix": 类似 Helix 编辑器的水平分栏
+            win = {
+                -- no_overlap = true, -- 是否避免与其他窗口重叠
+                title = true, -- 不显示窗口标题
+                width = 0.5, -- 窗口宽度占屏幕的 50%
+            },
+        },
+        keys = {
+            {
+                "<leader>?", -- 按下 空格+? 触发
+                function()
+                    require("which-key").show({
+                        global = false, -- 只显示当前缓冲区的本地快捷键
+                                        -- true: 显示全局快捷键
+                                        -- false: 只显示 buffer-local 快捷键
+                    })
+                end,
+                desc = "Buffer local KeyMaps (which-key)", -- 快捷键描述
+            },
+        },
+    },
 	{
 		"petertriho/nvim-scrollbar",
 		config = function()
@@ -465,7 +483,7 @@ return { -----------------------------------------------------------------------
 		version = "*",
     -- stylua: ignore
     keys = {{
-        "<leader>df",
+        "<leader>mf",
         function()
             require("mini.diff").toggle_overlay(vim.api.nvim_get_current_buf())
         end,

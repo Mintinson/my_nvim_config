@@ -65,7 +65,7 @@ return {
                     "--header-insertion-decorators",
                     "--completion-style=detailed",
                     "--function-arg-placeholders=0",
-                    "--experimental-modules-support"
+                    "--experimental-modules-support",
                 },
                 filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
                 root_markers = {
@@ -87,6 +87,68 @@ return {
 
             -- 启用 clangd
             vim.lsp.enable("clangd")
+        end,
+    },
+
+    -- DAP: codelldb debugger 配置
+    {
+        "mfussenegger/nvim-dap",
+        optional = true,
+        opts = function()
+            local dap = require("dap")
+
+            -- codelldb adapter 配置
+            -- Mason 安装路径
+            local mason_path = vim.fn.stdpath("data") .. "/mason"
+            local codelldb_path = mason_path .. "/packages/codelldb/extension/adapter/codelldb"
+            local liblldb_path = mason_path .. "/packages/codelldb/extension/lldb/lib/liblldb.so"
+
+            dap.adapters.codelldb = {
+                type = "server",
+                port = "${port}",
+                executable = {
+                    command = codelldb_path,
+                    args = { "--port", "${port}" },
+                },
+            }
+
+            -- C/C++ 调试配置
+            local codelldb_config = {
+                {
+                    name = "Launch file",
+                    type = "codelldb",
+                    request = "launch",
+                    program = function()
+                        return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+                    end,
+                    cwd = "${workspaceFolder}",
+                    stopOnEntry = false,
+                },
+                {
+                    name = "Launch file with arguments",
+                    type = "codelldb",
+                    request = "launch",
+                    program = function()
+                        return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+                    end,
+                    args = function()
+                        local args_string = vim.fn.input("Arguments: ")
+                        return vim.split(args_string, " +")
+                    end,
+                    cwd = "${workspaceFolder}",
+                    stopOnEntry = false,
+                },
+                {
+                    name = "Attach to process",
+                    type = "codelldb",
+                    request = "attach",
+                    pid = require("dap.utils").pick_process,
+                    cwd = "${workspaceFolder}",
+                },
+            }
+
+            dap.configurations.c = codelldb_config
+            dap.configurations.cpp = codelldb_config
         end,
     },
 }
