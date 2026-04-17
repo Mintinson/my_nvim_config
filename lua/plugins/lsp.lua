@@ -206,10 +206,14 @@ return { -- Mason: 工具安装管理器
             border = "rounded",
             title = "Preview",
             title_pos = "center",
-            position = { 0.3, 0.3 },
-            size = { width = 0.6, height = 0.5 },
-            zindex = 200,
-        },
+            ---`row` and `col` values relative to the editor
+            position = {0.3, 0.3},
+            size = {
+                width = 0.6,
+                height = 0.5
+            },
+            zindex = 200
+        }
     },
 
     specs = {
@@ -233,25 +237,7 @@ return { -- Mason: 工具安装管理器
             })
         end
     },
-    opts = {
-        focus = false,
-        warn_no_results = false,
-        open_no_results = true,
-        preview = {
-            type = "float",
-            relative = "editor",
-            border = "rounded",
-            title = "Preview",
-            title_pos = "center",
-            ---`row` and `col` values relative to the editor
-            position = {0.3, 0.3},
-            size = {
-                width = 0.6,
-                height = 0.5
-            },
-            zindex = 200
-        }
-    },
+
 
     config = function(_, opts)
         require("trouble").setup(opts)

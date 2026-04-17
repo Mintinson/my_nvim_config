@@ -34,9 +34,19 @@ return {
 			-- C-e: Hide menu
 			-- C-k: Toggle signature help (if signature.enabled = true)
 			--
-			-- See :h blink-cmp-config-keymap for defining your own keymap
+			-- See :h blink-cmp-config-keymap for defining your own keymap，
+			-- 禁用终端中的补全
+        enabled = function()
+            return vim.bo.buftype ~= "terminal" 
+                and vim.bo.buftype ~= "prompt"
+                and vim.b.completion ~= false
+        end,
 			keymap = {
 				preset = "default",
+				-- ["<C-y>"] = { "select_and_accept" },
+            
+				-- 添加回车键确认补全
+				["<CR>"] = { "select_and_accept", "fallback" },
 				["<C-u>"] = { "scroll_documentation_up", "fallback" },
 				["<C-d>"] = { "scroll_documentation_down", "fallback" },
 			},

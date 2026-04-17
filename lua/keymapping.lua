@@ -39,6 +39,10 @@ vim.keymap.set("v", "<A-Up>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" }
 vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelUp>", "<C-y>", { desc = "Scroll up 1 line" })
 vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelDown>", "<C-e>", { desc = "Scroll down 1 line" })
 
+-- 插入模式下滚轮：先退出插入模式，再滚动
+vim.keymap.set("i", "<ScrollWheelUp>", "<Esc><C-y>", { desc = "Exit insert and scroll up" })
+vim.keymap.set("i", "<ScrollWheelDown>", "<Esc><C-e>", { desc = "Exit insert and scroll down" })
+
 -- 每次滚动 2 行（介于默认 3 行和 1 行之间）
 -- vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelUp>", "<C-y><C-y>", { desc = "Scroll up 2 lines" })
 -- vim.keymap.set({ "n", "v", "i" }, "<ScrollWheelDown>", "<C-e><C-e>", { desc = "Scroll down 2 lines" })

@@ -80,6 +80,12 @@ return {
 			bigfile = {
 				enabled = true, -- 启用大文件检测。当打开大文件时，自动禁用 Treesitter、LSP 等耗资源功能以防止卡顿
 			},
+            -- 会话管理：保存和恢复工作区状态
+            session = {
+                enabled = true,  -- 启用会话功能
+                autoload = false, -- 不自动加载上次会话（可改为 true）
+                autosave = true,  -- 退出时自动保存会话
+            },
 			-- 启动界面：显示仪表盘
 			dashboard = {
 				enabled = true,
@@ -98,11 +104,11 @@ return {
                     keys = {
                         { icon = "󰈞 ", key = "f", desc = "Find File", action = ":lua Snacks.picker.files()" },
                         { icon = "󰈔 ", key = "n", desc = "New File", action = ":ene | startinsert" },
-                        { icon = "󰊄 ", key = "g", desc = "Find Text", action = ":lua Snacks.picker.grep()" },
+                        -- { icon = "󰊄 ", key = "g", desc = "Find Text", action = ":lua Snacks.picker.grep()" },
                         { icon = "󰋚 ", key = "r", desc = "Recent Files", action = ":lua Snacks.picker.recent()" },
-                        { icon = "󰒓 ", key = "c", desc = "Config", action = ":lua Snacks.picker.files({ cwd = vim.fn.stdpath('config') })" },
-                        { icon = "󰦛 ", key = "s", desc = "Restore Session", section = "session" },
                         { icon = "󰏓 ", key = "p", desc = "Projects", action = ":lua Snacks.picker.projects()" },
+                        { icon = "󰦛 ", key = "s", desc = "Restore Session", action = ":lua require('persistence').load()" },
+                        { icon = "󰒓 ", key = "c", desc = "Config", action = ":lua Snacks.picker.files({ cwd = vim.fn.stdpath('config') })" },
                         { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
                         { icon = "󰈆 ", key = "q", desc = "Quit", action = ":qa" },
                     },
