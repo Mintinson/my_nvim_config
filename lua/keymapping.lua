@@ -17,10 +17,10 @@ vim.keymap.set("n", "<D-l>", "<C-w>l", { desc = "Go to right window" })
 vim.keymap.set("n", "<A-z>", "<CMD>set wrap!<CR>", { desc = "Toggle line wrap" })
 
 -- 查看当前 buffer 的 LSP 客户端信息
-vim.keymap.set("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "[LSP] Info" })
+vim.keymap.set("n", "<leader>li", "<cmd>checkhealth vim.lsp<cr>", { desc = "[LSP] Info" })
 
 -- 查看 LSP 日志
-vim.keymap.set("n", "<leader>ll", "<cmd>lua vim.cmd('e ' .. vim.lsp.get_log_path())<cr>", { desc = "[LSP] Log" })
+vim.keymap.set("n", "<leader>ll", "<cmd>lua vim.cmd('e ' .. vim.lsp.log.get_filename())<cr>", { desc = "[LSP] Log" })
 
 -- LSP 代码操作
 vim.keymap.set({ "n", "x" }, "<leader>ca", function()
@@ -71,7 +71,7 @@ vim.keymap.set("n", "<leader>rp", "<cmd>Lazy<cr>", { desc = "Open Lazy.nvim" })
 
 -- 清理 LSP 日志
 vim.keymap.set("n", "<leader>lc", function()
-    local log_path = vim.lsp.get_log_path()
+    local log_path = vim.lsp.log.get_filename()
     local file = io.open(log_path, "w")
     if file then
         file:close()
@@ -83,7 +83,7 @@ end, { desc = "[LSP] Clear log" })
 
 -- 查看日志大小
 vim.keymap.set("n", "<leader>ls", function()
-    local log_path = vim.lsp.get_log_path()
+    local log_path = vim.lsp.log.get_filename()
     local stat = vim.uv.fs_stat(log_path)
     if stat then
         local size_mb = stat.size / 1024 / 1024

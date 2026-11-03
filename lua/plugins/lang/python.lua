@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Python 语言配置
--- 使用 Neovim 0.11+ vim.lsp.config() API
+-- 工具、格式化和调试；LSP 差异配置见 after/lsp/，启用清单见 config/servers.lua
 -- ============================================================================
 
 return {
@@ -16,63 +16,15 @@ return {
 
     -- Mason: install formatters/linters
     {
-        "williamboman/mason.nvim",
+        "mason-org/mason.nvim",
         optional = true,
         opts = {
             ensure_installed = {
                 "ruff",
+                "debugpy",
             },
         },
         opts_extend = { "ensure_installed" },
-    },
-
-    -- Mason-lspconfig: install LSP servers
-    {
-        "williamboman/mason-lspconfig.nvim",
-        optional = true,
-        opts = {
-            ensure_installed = {
-                "ty",
-            },
-        },
-        opts_extend = { "ensure_installed" },
-    },
-
-    -- ty LSP 配置（Neovim 0.11+）
-    {
-        "neovim/nvim-lspconfig",
-        optional = true,
-        opts = function()
-            -- 使用 vim.lsp.config() 配置 ty
-            -- 这会与全局 "*" 配置自动合并
-            vim.lsp.config("ty", {
-                cmd = { "ty", "server" },
-                filetypes = { "python" },
-                root_markers = {
-                    "ty.toml",
-                    "pyproject.toml",
-                    "setup.py",
-                    "setup.cfg",
-                    "requirements.txt",
-                    ".git",
-                },
-                -- ty 的 settings 配置
-                -- 参考: https://docs.astral.sh/ty/reference/editor-settings/
-                settings = {
-                    -- Inlay hints 配置
-                    inlayHints = {
-                        enable = true,
-                        parameterNames = true,
-                        variableTypes = true,
-                        functionReturnTypes = true,
-                        genericTypes = true,
-                    },
-                },
-            })
-
-            -- 启用 ty LSP
-            vim.lsp.enable("ty")
-        end,
     },
 
     -- Conform: formatting
@@ -112,8 +64,6 @@ return {
                     notify_user_on_venv_activation = true,
                 },
             },
-            -- 指定支持的 Python LSP 名称
-            name = { "ty", "pyright", "pylsp", "basedpyright" },
         },
         keys = {
             { "<leader>cv", "<cmd>VenvSelect<cr>", desc = "Select Python Virtual Env", ft = "python" },
@@ -144,7 +94,7 @@ return {
         else
           cb({
             type = "executable",
-            command = "python",
+            command = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python",
             args = { "-m", "debugpy.adapter" },
             options = {
               source_filetype = "python",

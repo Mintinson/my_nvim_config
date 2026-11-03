@@ -1,6 +1,6 @@
 -- ============================================================================
 -- C# 语言配置
--- 使用 Neovim 0.11+ vim.lsp.config() API
+-- 工具、格式化和调试；LSP 差异配置见 after/lsp/，启用清单见 config/servers.lua
 -- ============================================================================
 
 return {
@@ -16,25 +16,12 @@ return {
 
     -- Mason: 安装工具（formatter, debugger 等）
     {
-        "williamboman/mason.nvim",
+        "mason-org/mason.nvim",
         optional = true,
         opts = {
             ensure_installed = {
                 "csharpier",   -- C# 代码格式化工具
                 "netcoredbg",  -- .NET Core 调试器
-            },
-        },
-        opts_extend = { "ensure_installed" },
-    },
-
-    -- Mason-lspconfig: 安装 LSP 服务器
-    {
-        "williamboman/mason-lspconfig.nvim",
-        optional = true,
-        opts = {
-            ensure_installed = {
-                "omnisharp", -- C# Language Server (功能最全)
-                -- "csharp_ls", -- 备选：更轻量的 C# LSP
             },
         },
         opts_extend = { "ensure_installed" },
@@ -49,57 +36,6 @@ return {
                 cs = { "csharpier" },
             },
         },
-    },
-
-    -- OmniSharp LSP 配置 (Neovim 0.11+)
-    {
-        "neovim/nvim-lspconfig",
-        optional = true,
-        opts = function()
-            -- 使用 vim.lsp.config() 配置 omnisharp
-            -- 这会与全局 "*" 配置自动合并
-            vim.lsp.config("omnisharp", {
-                cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
-                filetypes = { "cs", "vb" },
-                root_markers = {
-                    "*.sln",
-                    "*.csproj",
-                    "omnisharp.json",
-                    "function.json",
-                    ".git",
-                },
-                settings = {
-                    FormattingOptions = {
-                        EnableEditorConfigSupport = true, -- 支持 .editorconfig
-                        OrganizeImports = true,           -- 自动整理 using
-                    },
-                    MsBuild = {
-                        LoadProjectsOnDemand = false, -- 启动时加载所有项目
-                    },
-                    RoslynExtensionsOptions = {
-                        EnableAnalyzersSupport = true,           -- 启用 Roslyn 分析器
-                        EnableImportCompletion = true,           -- 启用导入补全
-                        AnalyzeOpenDocumentsOnly = true,         -- 只分析打开的文档（提升性能）
-                        EnableDecompilationSupport = true,       -- 启用反编译支持
-                        InlayHintsOptions = {
-                            EnableForParameters = true,          -- 参数名提示
-                            ForLiteralParameters = true,         -- 字面量参数提示
-                            ForIndexerParameters = true,         -- 索引器参数提示
-                            EnableForTypes = true,               -- 类型提示
-                            ForImplicitVariableTypes = true,     -- var 类型提示
-                            ForLambdaParameterTypes = true,      -- Lambda 参数类型提示
-                            ForImplicitObjectCreation = true,    -- new() 类型提示
-                        },
-                    },
-                    Sdk = {
-                        IncludePrereleases = false, -- 不包含预览版 SDK
-                    },
-                },
-            })
-
-            -- 启用 omnisharp
-            vim.lsp.enable("omnisharp")
-        end,
     },
 
     -- DAP: netcoredbg 调试器配置

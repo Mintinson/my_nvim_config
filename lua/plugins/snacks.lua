@@ -8,7 +8,7 @@ return {
             vim.opt.confirm = false
 
             -- ================================================================
-            -- 拦截 :q, :qa, :wq 等退出命令，添加保存确认
+            -- 拦截 :q、:qa、:qall，添加保存确认
             -- ================================================================
             local function smart_quit(cmd, force)
                 -- 如果是强制退出命令，直接执行
@@ -62,10 +62,16 @@ return {
                 end)
             end
 
-            -- 创建用户命令覆盖原生命令
-            vim.api.nvim_create_user_command("Q", function() smart_quit("q", false) end, { desc = "Smart quit" })
-            vim.api.nvim_create_user_command("Qa", function() smart_quit("qa", false) end, { desc = "Smart quit all" })
-            vim.api.nvim_create_user_command("QA", function() smart_quit("qa", false) end, { desc = "Smart quit all" })
+            -- 创建支持 ! 的退出命令，供下面的命令缩写使用
+            vim.api.nvim_create_user_command("Q", function(args)
+                smart_quit("q", args.bang)
+            end, { bang = true, desc = "Smart quit" })
+            vim.api.nvim_create_user_command("Qa", function(args)
+                smart_quit("qa", args.bang)
+            end, { bang = true, desc = "Smart quit all" })
+            vim.api.nvim_create_user_command("QA", function(args)
+                smart_quit("qa", args.bang)
+            end, { bang = true, desc = "Smart quit all" })
 
             -- 使用 cabbrev 将 :q 映射到 :Q
             vim.cmd([[
@@ -394,13 +400,6 @@ return {
 					require("snacks").picker.buffers() -- 查找已打开的缓冲区
 				end,
 				desc = "[Snacks] Buffers",
-			},
-			{
-				"<leader>sn",
-				function()
-					require("snacks").picker.notifications() -- 搜索通知历史 (重复定义，保留原样)
-				end,
-				desc = "[Snacks] Notification history",
 			}, -- find
 			{
 				"<leader>sb",
@@ -624,7 +623,7 @@ return {
 				desc = "[Snacks] Man pages",
 			},
 			{
-				"<leader>sp",
+				"<leader>sP",
 				function()
 					require("snacks").picker.lazy() -- 搜索插件规范
 				end,
@@ -638,7 +637,7 @@ return {
 				desc = "[Snacks] Quickfix list",
 			},
 			{
-				"<leader>sr",
+				"<leader>sR",
 				function()
 					require("snacks").picker.resume() -- 恢复上次的选择器会话
 				end,

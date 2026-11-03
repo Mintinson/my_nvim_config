@@ -99,7 +99,7 @@ return { -----------------------------------------------------------------------
 	-----------------------------------------------------------------------------
 	{
 		"romgrk/barbar.nvim",
-		version = "^1.0.0", -- 指定版本，防止大版本更新破坏配置
+		version = "*", -- 指定版本，防止大版本更新破坏配置
 		dependencies = { "lewis6991/gitsigns.nvim", "nvim-tree/nvim-web-devicons" }, -- 依赖 Git 信息和图标
 
 		init = function()
@@ -231,7 +231,6 @@ return { -----------------------------------------------------------------------
 		},
 		opts = {
 			-- === 核心功能配置 ===
-			update_cwd = true,  -- 当目录改变时自动更新 NvimTree 的根目录
 			sync_root_with_cwd = true,  -- 同步 NvimTree 根目录与工作目录
 			respect_buf_cwd = true,  -- 尊重缓冲区的工作目录
 			filters = {
@@ -338,11 +337,11 @@ return { -----------------------------------------------------------------------
 			},
 			-- LSP 集成配置
 			lsp = {
+                    progress = { enabled = false },
 				override = {
 					-- 接管 LSP 的文档悬浮窗和 Markdown 渲染，让它们看起来更漂亮（有边框、高亮等）
 					["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 					["vim.lsp.util.stylize_markdown"] = true,
-					["cop.entry.get_documentation"] = true,
 				},
 			},
 			-- 预设配置 (Presets)

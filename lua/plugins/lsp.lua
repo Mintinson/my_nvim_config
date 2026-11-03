@@ -1,11 +1,11 @@
 -- ============================================================================
 -- LSP 全局配置 (Neovim 0.11+)
 -- 本文件只包含语言无关的 LSP 基础能力配置
--- 语言特定配置请放在 lang/xxx.lua 中
+-- 服务器差异配置：after/lsp/*.lua；安装和启用清单：config/servers.lua
 -- ============================================================================
 return { -- Mason: 工具安装管理器
 {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = {
         ensure_installed = {}
     },
@@ -31,19 +31,18 @@ return { -- Mason: 工具安装管理器
 }, -- Mason-lspconfig: 仅用于自动安装 LSP 服务器
 -- 注意：不再使用 handlers 来配置 LSP，改用 vim.lsp.config()
 {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = {"williamboman/mason.nvim"},
+    "mason-org/mason-lspconfig.nvim",
+    dependencies = {"mason-org/mason.nvim"},
     opts = {
-        ensure_installed = {},
-        automatic_installation = true
+        ensure_installed = require("config.servers"),
+        automatic_enable = false
         -- 不再使用 handlers，LSP 配置由 vim.lsp.config() 负责
     },
-    opts_extend = {"ensure_installed"}
 }, -- LSP 全局基础配置
 {
     "neovim/nvim-lspconfig",
     event = {"BufReadPre", "BufNewFile"},
-    dependencies = {"saghen/blink.cmp", "williamboman/mason.nvim"},
+    dependencies = {"saghen/blink.cmp", "mason-org/mason-lspconfig.nvim"},
     config = function()
         -- ================================================================
         -- 全局 LSP 默认配置 (Neovim 0.11+ vim.lsp.config)
@@ -51,9 +50,7 @@ return { -- Mason: 工具安装管理器
         -- ================================================================
         vim.lsp.config("*", {
             -- 全局 capabilities（包含 blink.cmp 的补全能力）
-            capabilities = require("blink.cmp").get_lsp_capabilities(),
-            -- 全局 root_markers（通用项目根目录标识）
-            root_markers = {".git", ".editorconfig"}
+            capabilities = require("blink.cmp").get_lsp_capabilities()
         })
 
         -- ================================================================
@@ -72,23 +69,6 @@ return { -- Mason: 工具安装管理器
                 border = "rounded",
                 anchor_bias = "auto"
             }
-        })
-
-        -- ================================================================
-        -- LSP Handlers 全局配置（hover, signature help 等）
-        -- ================================================================
-        vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-            border = "rounded",
-            anchor_bias = "auto",
-            max_width = 80,
-            max_height = 20
-        })
-
-        vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-            border = "rounded",
-            anchor_bias = "auto",
-            max_width = 80,
-            max_height = 20
         })
 
         -- ================================================================
@@ -135,6 +115,8 @@ return { -- Mason: 工具安装管理器
                 end, "[LSP] Toggle inlay hints")
             end
         })
+
+        vim.lsp.enable(require("config.servers"))
     end
 }, {
     "stevearc/conform.nvim",
@@ -163,16 +145,19 @@ return { -- Mason: 工具安装管理器
 }, {
     "mfussenegger/nvim-lint",
     event = "BufWritePost",
-    config = function()
+    config = function(_, opts)
+        local lint = require("lint")
+        lint.linters_by_ft = (opts or {}).linters_by_ft or {}
+
         vim.api.nvim_create_autocmd({"BufWritePost"}, {
             callback = function()
                 -- try_lint without arguments runs the linters defined in `linters_by_ft`
                 -- for the current filetype
-                require("lint").try_lint()
+                lint.try_lint()
 
                 -- You can call `try_lint` with a linter name or a list of names to always
                 -- run specific linters, independent of the `linters_by_ft` configuration
-                require("lint").try_lint("codespell")
+                lint.try_lint("codespell")
             end
         })
     end
